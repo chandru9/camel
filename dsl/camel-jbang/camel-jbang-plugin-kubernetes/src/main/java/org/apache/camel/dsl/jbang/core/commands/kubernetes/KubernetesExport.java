@@ -54,7 +54,7 @@ import org.apache.camel.util.StringHelper;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "export", description = "Export as Maven/Gradle project that contains a Kubernetes deployment manifest",
+@Command(name = "export", description = "Export as Maven project that contains a Kubernetes deployment manifest",
          sortOptions = false)
 public class KubernetesExport extends Export {
 
@@ -168,7 +168,6 @@ public class KubernetesExport extends Export {
         camelSpringBootVersion = configurer.camelSpringBootVersion;
         quarkusGroupId = configurer.quarkusGroupId;
         quarkusArtifactId = configurer.quarkusArtifactId;
-        buildTool = configurer.buildTool;
         openapi = configurer.openapi;
         exportDir = configurer.exportDir;
         packageName = configurer.packageName;
@@ -177,7 +176,6 @@ public class KubernetesExport extends Export {
         javaLiveReload = configurer.javaLiveReload;
         ignoreLoadingError = configurer.ignoreLoadingError;
         mavenWrapper = configurer.mavenWrapper;
-        gradleWrapper = configurer.gradleWrapper;
         fresh = configurer.fresh;
         download = configurer.download;
         skipPlugins = configurer.skipPlugins;
@@ -210,10 +208,6 @@ public class KubernetesExport extends Export {
         }
 
         printer().println("Exporting application ...");
-
-        if (!buildTool.equals("maven")) {
-            printer().printf("--build-tool=%s is not yet supported%n", buildTool);
-        }
 
         // Resolve image group and registry
         String resolvedImageGroup = resolveImageGroup();
@@ -533,14 +527,12 @@ public class KubernetesExport extends Export {
             buildProperties.add("quarkus.smallrye-health.root-path=/observe/health");
             addToApplicationProperties("quarkus.management.port=" + probePort);
         } else if (RuntimeType.springBoot == runtime) {
-            // addDependencies("org.springframework.boot:spring-boot-starter-actuator");
             // jkube reads spring-boot properties to set the kubernetes container health probes path
             // in this case, jkube reads from the application.properties and not from the build properties in pom.xml
             addToApplicationProperties("management.endpoints.web.base-path=/observe",
                     "management.server.port=" + probePort,
-                    // jkube uses the old property to enable the readiness/liveness probes
-                    // TODO: rename this property once https://github.com/eclipse-jkube/jkube/issues/3690 is fixed
-                    "management.health.probes.enabled=true");
+                    // jkube inspects this property to enable the readiness/liveness probes
+                    "management.endpoint.health.probes.enabled=true");
         } else if (RuntimeType.main == runtime) {
             addToApplicationProperties("camel.management.port=" + probePort);
         }
@@ -643,7 +635,6 @@ public class KubernetesExport extends Export {
             String camelSpringBootVersion,
             String quarkusGroupId,
             String quarkusArtifactId,
-            String buildTool,
             String openapi,
             String exportDir,
             String packageName,
@@ -652,7 +643,6 @@ public class KubernetesExport extends Export {
             boolean javaLiveReload,
             boolean ignoreLoadingError,
             boolean mavenWrapper,
-            boolean gradleWrapper,
             boolean fresh,
             boolean download,
             boolean packageScanJars,

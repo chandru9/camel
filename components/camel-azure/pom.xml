@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>components</artifactId>
-        <version>4.18.0-SNAPSHOT</version>
+        <version>4.19.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-azure-parent</artifactId>
@@ -55,6 +55,7 @@
         <module>camel-azure-key-vault</module>
         <module>camel-azure-files</module>
         <module>camel-azure-schema-registry</module>
+        <module>camel-azure-functions</module>
     </modules>
 
 </project>

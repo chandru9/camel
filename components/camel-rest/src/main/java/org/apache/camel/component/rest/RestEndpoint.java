@@ -23,20 +23,21 @@ import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
 import org.apache.camel.spi.RestProducerFactory;
+import org.apache.camel.spi.RestRegistry;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultEndpoint;
+import org.apache.camel.support.PluginHelper;
+import org.apache.camel.support.ResolverHelper;
 import org.apache.camel.support.component.PropertyConfigurerSupport;
 import org.apache.camel.util.HostUtils;
 import org.apache.camel.util.MimeTypeHelper;
@@ -349,18 +350,10 @@ public class RestEndpoint extends DefaultEndpoint {
             return null;
         }
         LOG.debug("Discovering camel-openapi-java on classpath for using api-doc: {}", apiDoc);
-        try {
-            FactoryFinder finder = getCamelContext().getCamelContextExtension().getFactoryFinder(RESOURCE_PATH);
-            RestProducerFactory apiDocFactory = finder.newInstance(DEFAULT_API_COMPONENT_NAME, RestProducerFactory.class)
-                    .orElse(null);
-            if (apiDocFactory == null) {
-                throw new NoFactoryAvailableException("Cannot find camel-openapi-java on classpath");
-            }
-            parameters.put("apiDoc", apiDoc);
-            return apiDocFactory;
-        } catch (NoFactoryAvailableException e) {
-            throw new IllegalStateException("Cannot find camel-openapi-java on classpath to use with api-doc: " + apiDoc);
-        }
+        RestProducerFactory apiDocFactory = ResolverHelper.resolveMandatoryService(getCamelContext(),
+                "rest/" + DEFAULT_API_COMPONENT_NAME, RestProducerFactory.class, "camel-openapi-java");
+        parameters.put("apiDoc", apiDoc);
+        return apiDocFactory;
     }
 
     private record ProducerFactoryResult(RestProducerFactory factory, String name) {
@@ -494,7 +487,8 @@ public class RestEndpoint extends DefaultEndpoint {
         configureConsumer(consumer);
 
         // add to rest registry, so we can keep track of them
-        getCamelContext().getRestRegistry().addRestService(consumer, false, url, baseUrl, getPath(), getUriTemplate(),
+        RestRegistry registry = PluginHelper.getRestRegistry(getCamelContext());
+        registry.addRestService(consumer, false, url, baseUrl, getPath(), getUriTemplate(),
                 getMethod(), getConsumes(), getProduces(), getInType(), getOutType(), getRouteId(), getDescription());
         return consumer;
     }

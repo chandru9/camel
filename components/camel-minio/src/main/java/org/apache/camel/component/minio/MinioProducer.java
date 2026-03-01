@@ -156,15 +156,12 @@ public class MinioProducer extends DefaultProducer {
                 if (object == null) {
                     throw new IllegalArgumentException("Message body is null");
                 }
-                if (object instanceof File) {
-                    filePayload = (File) object;
+                if (object instanceof File file) {
+                    filePayload = file;
                     inputStream = new FileInputStream(filePayload);
                     if (contentLength <= 0) {
                         contentLength = filePayload.length();
                     }
-                } else if (object instanceof InputStream is) {
-                    // Use the InputStream directly (e.g., from WrappedFile.getFile())
-                    inputStream = is;
                 } else {
                     inputStream = exchange.getMessage().getMandatoryBody(InputStream.class);
                     if (contentLength <= 0) {

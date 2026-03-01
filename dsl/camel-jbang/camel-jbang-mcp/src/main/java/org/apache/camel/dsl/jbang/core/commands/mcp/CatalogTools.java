@@ -57,7 +57,10 @@ public class CatalogTools {
             @ToolArg(description = "Filter by category label (e.g., cloud, messaging, database, file)") String label,
             @ToolArg(description = "Maximum number of results to return (default: 50)") Integer limit,
             @ToolArg(description = "Runtime type: main, spring-boot, or quarkus (default: main)") String runtime,
-            @ToolArg(description = "Specific Camel version to query (e.g., 4.4.0). If not specified, uses the default catalog version.") String camelVersion) {
+            @ToolArg(description = "Version to query. For Main or Spring Boot: the Camel version (e.g., 4.17.0). "
+                                   + "For quarkus: the Quarkus Platform version (e.g., 3.31.3) as returned by "
+                                   + "camel_version_list quarkusVersion field. "
+                                   + "If not specified, uses the default catalog version.") String camelVersion) {
 
         int maxResults = limit != null ? limit : 50;
 
@@ -74,8 +77,16 @@ public class CatalogTools {
                     .collect(Collectors.toList());
 
             return new ComponentListResult(components.size(), cat.getCatalogVersion(), components);
-        } catch (Exception e) {
-            throw new ToolCallException("Failed to list components: " + e.getMessage(), e);
+        } catch (ToolCallException e) {
+            throw e;
+        } catch (Throwable e) {
+            String hint = "";
+            if ("quarkus".equalsIgnoreCase(runtime) && camelVersion != null) {
+                hint = " Note: For Quarkus runtime, the version parameter must be the Quarkus Platform version "
+                       + "(e.g., 3.31.3) as returned by camel_version_list quarkusVersion field, "
+                       + "not the Camel core version. You passed: " + camelVersion;
+            }
+            throw new ToolCallException("Failed to list components: " + e.getMessage() + hint, e);
         }
     }
 
@@ -87,7 +98,10 @@ public class CatalogTools {
     public ComponentDetailResult camel_catalog_component_doc(
             @ToolArg(description = "Component name (e.g., kafka, http, file, timer)") String component,
             @ToolArg(description = "Runtime type: main, spring-boot, or quarkus (default: main)") String runtime,
-            @ToolArg(description = "Specific Camel version to query (e.g., 4.4.0). If not specified, uses the default catalog version.") String camelVersion) {
+            @ToolArg(description = "Version to query. For Main or Spring Boot: the Camel version (e.g., 4.17.0). "
+                                   + "For quarkus: the Quarkus Platform version (e.g., 3.31.3) as returned by "
+                                   + "camel_version_list quarkusVersion field. "
+                                   + "If not specified, uses the default catalog version.") String camelVersion) {
 
         if (component == null || component.isBlank()) {
             throw new ToolCallException("Component name is required", null);
@@ -97,14 +111,40 @@ public class CatalogTools {
             CamelCatalog cat = loadCatalog(runtime, camelVersion);
             ComponentModel model = cat.componentModel(component);
             if (model == null) {
-                throw new ToolCallException("Component not found: " + component, null);
+                // Check if it might be a data format or language instead
+                StringBuilder hint = new StringBuilder("Component not found: " + component + ".");
+                DataFormatModel dfModel = cat.dataFormatModel(component);
+                if (dfModel != null) {
+                    hint.append(" However, '").append(component).append("' exists as a DATA FORMAT. ")
+                            .append("Use camel_catalog_dataformat_doc instead.");
+                } else {
+                    // Try partial match in data formats
+                    List<String> matchingDf = cat.findDataFormatNames().stream()
+                            .filter(n -> n.contains(component) || component.contains(n))
+                            .collect(Collectors.toList());
+                    if (!matchingDf.isEmpty()) {
+                        hint.append(" Did you mean one of these DATA FORMATS? ").append(matchingDf)
+                                .append(". Use camel_catalog_dataformat_doc instead.");
+                    } else {
+                        // Try partial match in components
+                        List<String> matchingComp = findComponentNames(cat).stream()
+                                .filter(n -> n.contains(component) || component.contains(n))
+                                .limit(5)
+                                .collect(Collectors.toList());
+                        if (!matchingComp.isEmpty()) {
+                            hint.append(" Did you mean one of these components? ").append(matchingComp);
+                        }
+                    }
+                }
+                throw new ToolCallException(hint.toString(), null);
             }
 
             return toComponentDetailResult(model);
         } catch (ToolCallException e) {
             throw e;
-        } catch (Exception e) {
-            throw new ToolCallException("Failed to get component doc: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Component not found: " + component + " (" + e.getClass().getName() + "): " + e.getMessage(), null);
         }
     }
 
@@ -129,8 +169,9 @@ public class CatalogTools {
                     .collect(Collectors.toList());
 
             return new DataFormatListResult(dataFormats.size(), dataFormats);
-        } catch (Exception e) {
-            throw new ToolCallException("Failed to list data formats: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Failed to list data formats (" + e.getClass().getName() + "): " + e.getMessage(), null);
         }
     }
 
@@ -151,8 +192,64 @@ public class CatalogTools {
                     .collect(Collectors.toList());
 
             return new LanguageListResult(languages.size(), languages);
-        } catch (Exception e) {
-            throw new ToolCallException("Failed to list languages: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Failed to list languages (" + e.getClass().getName() + "): " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Tool to get detailed documentation for a specific data format.
+     */
+    @Tool(description = "Get detailed documentation for a Camel data format including all options, "
+                        + "Maven coordinates, and configuration parameters.")
+    public DataFormatDetailResult camel_catalog_dataformat_doc(
+            @ToolArg(description = "Data format name (e.g., json-jackson, avro, csv, protobuf, jaxb)") String dataformat) {
+
+        if (dataformat == null || dataformat.isBlank()) {
+            throw new ToolCallException("Data format name is required", null);
+        }
+
+        try {
+            DataFormatModel model = catalog.dataFormatModel(dataformat);
+            if (model == null) {
+                throw new ToolCallException("Data format not found: " + dataformat, null);
+            }
+
+            return toDataFormatDetailResult(model);
+        } catch (ToolCallException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Data format not found: " + dataformat + " (" + e.getClass().getName() + "): " + e.getMessage(),
+                    null);
+        }
+    }
+
+    /**
+     * Tool to get detailed documentation for a specific expression language.
+     */
+    @Tool(description = "Get detailed documentation for a Camel expression language including all options, "
+                        + "Maven coordinates, and configuration parameters.")
+    public LanguageDetailResult camel_catalog_language_doc(
+            @ToolArg(description = "Language name (e.g., simple, jsonpath, xpath, jq, groovy)") String language) {
+
+        if (language == null || language.isBlank()) {
+            throw new ToolCallException("Language name is required", null);
+        }
+
+        try {
+            LanguageModel model = catalog.languageModel(language);
+            if (model == null) {
+                throw new ToolCallException("Language not found: " + language, null);
+            }
+
+            return toLanguageDetailResult(model);
+        } catch (ToolCallException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Language not found: " + language + " (" + e.getClass().getName() + "): " + e.getMessage(), null);
         }
     }
 
@@ -175,8 +272,9 @@ public class CatalogTools {
                     .collect(Collectors.toList());
 
             return new EipListResult(eips.size(), eips);
-        } catch (Exception e) {
-            throw new ToolCallException("Failed to list EIPs: " + e.getMessage(), e);
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "Failed to list EIPs (" + e.getClass().getName() + "): " + e.getMessage(), null);
         }
     }
 
@@ -191,12 +289,19 @@ public class CatalogTools {
             throw new ToolCallException("EIP name is required", null);
         }
 
-        EipModel model = catalog.eipModel(eip);
-        if (model == null) {
-            throw new ToolCallException("EIP not found: " + eip, null);
-        }
+        try {
+            EipModel model = catalog.eipModel(eip);
+            if (model == null) {
+                throw new ToolCallException("EIP not found: " + eip, null);
+            }
 
-        return toEipDetailResult(model);
+            return toEipDetailResult(model);
+        } catch (ToolCallException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new ToolCallException(
+                    "EIP not found: " + eip + " (" + e.getClass().getName() + "): " + e.getMessage(), null);
+        }
     }
 
     // Catalog loading
@@ -215,11 +320,7 @@ public class CatalogTools {
         }
 
         // No specific version, use runtime-specific catalog or default
-        if (runtime == null || runtime.isBlank() || "main".equalsIgnoreCase(runtime)) {
-            return catalog;
-        }
-
-        RuntimeType runtimeType = RuntimeType.fromValue(runtime);
+        RuntimeType runtimeType = resolveRuntime(runtime);
         if (runtimeType == RuntimeType.springBoot) {
             return CatalogLoader.loadSpringBootCatalog(null, null, true);
         } else if (runtimeType == RuntimeType.quarkus) {
@@ -233,11 +334,19 @@ public class CatalogTools {
         if (runtime == null || runtime.isBlank() || "main".equalsIgnoreCase(runtime)) {
             return RuntimeType.main;
         }
-        return RuntimeType.fromValue(runtime);
+        try {
+            return RuntimeType.fromValue(runtime);
+        } catch (IllegalArgumentException e) {
+            throw new ToolCallException(
+                    "Unsupported runtime: " + runtime + ". Supported values are: main, spring-boot, quarkus", null);
+        }
     }
 
     private static List<String> findComponentNames(CamelCatalog catalog) {
         List<String> answer = catalog.findComponentNames();
+        if (answer == null) {
+            return new ArrayList<>();
+        }
         List<String> copy = new ArrayList<>(answer);
         copy.removeIf(String::isBlank);
         return copy;
@@ -361,6 +470,58 @@ public class CatalogTools {
                 options);
     }
 
+    private DataFormatDetailResult toDataFormatDetailResult(DataFormatModel model) {
+        List<OptionInfo> options = new ArrayList<>();
+        if (model.getOptions() != null) {
+            model.getOptions().forEach(opt -> options.add(new OptionInfo(
+                    opt.getName(),
+                    opt.getDescription(),
+                    opt.getType(),
+                    opt.isRequired(),
+                    opt.getDefaultValue() != null ? opt.getDefaultValue().toString() : null,
+                    opt.getGroup())));
+        }
+
+        return new DataFormatDetailResult(
+                model.getName(),
+                model.getTitle(),
+                model.getDescription(),
+                model.getLabel(),
+                model.isDeprecated(),
+                model.getSupportLevel() != null ? model.getSupportLevel().name() : null,
+                model.getGroupId(),
+                model.getArtifactId(),
+                model.getVersion(),
+                model.getModelName(),
+                options);
+    }
+
+    private LanguageDetailResult toLanguageDetailResult(LanguageModel model) {
+        List<OptionInfo> options = new ArrayList<>();
+        if (model.getOptions() != null) {
+            model.getOptions().forEach(opt -> options.add(new OptionInfo(
+                    opt.getName(),
+                    opt.getDescription(),
+                    opt.getType(),
+                    opt.isRequired(),
+                    opt.getDefaultValue() != null ? opt.getDefaultValue().toString() : null,
+                    opt.getGroup())));
+        }
+
+        return new LanguageDetailResult(
+                model.getName(),
+                model.getTitle(),
+                model.getDescription(),
+                model.getLabel(),
+                model.isDeprecated(),
+                model.getSupportLevel() != null ? model.getSupportLevel().name() : null,
+                model.getGroupId(),
+                model.getArtifactId(),
+                model.getVersion(),
+                model.getModelName(),
+                options);
+    }
+
     // Result record classes for Jackson serialization
 
     public record ComponentListResult(int count, String camelVersion, List<ComponentInfo> components) {
@@ -400,5 +561,15 @@ public class CatalogTools {
 
     public record EipDetailResult(String name, String title, String description, String label,
             List<OptionInfo> options) {
+    }
+
+    public record DataFormatDetailResult(String name, String title, String description, String label,
+            boolean deprecated, String supportLevel, String groupId, String artifactId,
+            String version, String modelName, List<OptionInfo> options) {
+    }
+
+    public record LanguageDetailResult(String name, String title, String description, String label,
+            boolean deprecated, String supportLevel, String groupId, String artifactId,
+            String version, String modelName, List<OptionInfo> options) {
     }
 }

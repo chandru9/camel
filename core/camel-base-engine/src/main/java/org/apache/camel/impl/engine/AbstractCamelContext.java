@@ -404,6 +404,7 @@ public abstract class AbstractCamelContext extends BaseService
         camelContextExtension.lazyAddContextPlugin(BackOffTimerFactory.class, this::createBackOffTimerFactory);
         camelContextExtension.lazyAddContextPlugin(GroovyScriptCompiler.class, this::createGroovyScriptCompiler);
         camelContextExtension.lazyAddContextPlugin(SimpleFunctionRegistry.class, this::createSimpleFunctionRegistry);
+        camelContextExtension.lazyAddContextPlugin(RestRegistry.class, this::createRestRegistry);
     }
 
     protected static <T> T lookup(CamelContext context, String ref, Class<T> type) {
@@ -2342,8 +2343,8 @@ public abstract class AbstractCamelContext extends BaseService
         StartupStepRecorder startupStepRecorder = camelContextExtension.getStartupStepRecorder();
         // NOTE: only check the specific class, not any subclass
         if (startupStepRecorder.getClass() == DefaultStartupStepRecorder.class) { // NOSONAR
-            StartupStepRecorder fr = camelContextExtension.getBootstrapFactoryFinder()
-                    .newInstance(StartupStepRecorder.FACTORY, StartupStepRecorder.class).orElse(null);
+            StartupStepRecorder fr
+                    = ResolverHelper.resolveService(this, StartupStepRecorder.FACTORY, StartupStepRecorder.class).orElse(null);
             if (fr != null) {
                 LOG.debug("Discovered startup recorder: {} from classpath", fr);
                 camelContextExtension.setStartupStepRecorder(fr);
@@ -2527,8 +2528,7 @@ public abstract class AbstractCamelContext extends BaseService
         boolean debuggerDetected = false;
         if (getDebugger() == null && hasService(BacklogDebugger.class) == null) {
             // detect if camel-debug is on classpath that enables debugging
-            DebuggerFactory df = getCamelContextExtension().getBootstrapFactoryFinder()
-                    .newInstance(Debugger.FACTORY, DebuggerFactory.class).orElse(null);
+            DebuggerFactory df = ResolverHelper.resolveService(this, Debugger.FACTORY, DebuggerFactory.class).orElse(null);
             if (df != null) {
                 debuggerDetected = true;
                 LOG.info("Detected: {} JAR (Enabling Camel Debugging)", df);
@@ -4272,12 +4272,12 @@ public abstract class AbstractCamelContext extends BaseService
 
     @Override
     public RestRegistry getRestRegistry() {
-        return camelContextExtension.getRestRegistry();
+        return PluginHelper.getRestRegistry(this);
     }
 
     @Override
     public void setRestRegistry(RestRegistry restRegistry) {
-        camelContextExtension.setRestRegistry(restRegistry);
+        throw new UnsupportedOperationException("Not in use");
     }
 
     protected RestRegistry createRestRegistry() {

@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-parent</artifactId>
-        <version>4.18.0-SNAPSHOT</version>
+        <version>4.19.0-SNAPSHOT</version>
         <relativePath>../parent</relativePath>
     </parent>
 
@@ -34,8 +34,9 @@
     <properties>
         <skipOnUnsupported>true</skipOnUnsupported>
         <enforcer.phase>none</enforcer.phase><!-- Save some time -->
+        <!-- Vulnerability scan only enabled runtime modules -->
+        <dependency-check.skip>true</dependency-check.skip>
     </properties>
-
 
     <repositories>
         <repository>
@@ -122,6 +123,9 @@
                                         </resource>
                                         <resource>
                                             <directory>../catalog/camel-report-maven-plugin/src/main/docs</directory>
+                                        </resource>
+                                        <resource>
+                                            <directory>../dsl/camel-yaml-dsl/camel-yaml-dsl-validator-maven-plugin/src/main/docs</directory>
                                         </resource>
                                     </resources>
                                 </configuration>

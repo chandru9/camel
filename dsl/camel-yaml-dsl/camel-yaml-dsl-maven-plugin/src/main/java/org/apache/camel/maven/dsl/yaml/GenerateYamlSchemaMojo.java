@@ -66,6 +66,9 @@ import org.jboss.jandex.DotName;
       threadSafe = true,
       requiresProject = false)
 public class GenerateYamlSchemaMojo extends GenerateYamlSupportMojo {
+
+    private static final String DRAFT = "http://json-schema.org/draft-04/schema#";
+
     @Parameter(required = true)
     private File outputFile;
     @Parameter(defaultValue = "true")
@@ -84,7 +87,7 @@ public class GenerateYamlSchemaMojo extends GenerateYamlSupportMojo {
 
         final ObjectNode root = mapper.createObjectNode();
 
-        root.put("$schema", "http://json-schema.org/draft-04/schema#");
+        root.put("$schema", DRAFT);
         root.put("type", "array");
 
         items = root.putObject("items");
@@ -288,6 +291,19 @@ public class GenerateYamlSchemaMojo extends GenerateYamlSupportMojo {
                     for (String n : sn) {
                         if ("load-balance".equals(n) || "loadBalance".equals(n)) {
                             skip = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            // we want to skip pattern from wiretap
+            if (propertyName.equals("pattern")) {
+                Optional<AnnotationValue> av = annotationValue(info, YAML_TYPE_ANNOTATION, "nodes");
+                if (av.isPresent()) {
+                    String[] sn = av.get().asStringArray();
+                    for (String n : sn) {
+                        if ("wire-tap".equals(n) || "wireTap".equals(n)) {
+                            skip = true;
                             break;
                         }
                     }

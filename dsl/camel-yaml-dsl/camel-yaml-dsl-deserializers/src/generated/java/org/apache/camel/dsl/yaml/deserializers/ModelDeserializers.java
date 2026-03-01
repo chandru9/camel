@@ -77,7 +77,6 @@ import org.apache.camel.model.RouteContextRefDefinition;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RouteTemplateParameterDefinition;
 import org.apache.camel.model.RoutingSlipDefinition;
-import org.apache.camel.model.SagaActionUriDefinition;
 import org.apache.camel.model.SagaDefinition;
 import org.apache.camel.model.SamplingDefinition;
 import org.apache.camel.model.ScriptDefinition;
@@ -5684,8 +5683,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
                     @YamlProperty(name = "inheritErrorHandler", type = "boolean", defaultValue = "true", description = "To turn off Camel error handling during load balancing. By default, Camel error handler will attempt calling a service, which means you can specify retires and other fine-grained settings. And only when Camel error handler have failed all attempts, then this load balancer will fail over to the next endpoint and try again. You can turn this off, and then this load balancer will fail over immediately on an error.", displayName = "Inherit Error Handler"),
                     @YamlProperty(name = "maximumFailoverAttempts", type = "string", defaultValue = "-1", description = "A value to indicate after X failover attempts we should exhaust (give up). Use -1 to indicate never give up and continuously try to failover. Use 0 to never failover. And use e.g. 3 to failover at most 3 times before giving up. This option can be used whether roundRobin is enabled or not.", displayName = "Maximum Failover Attempts"),
-                    @YamlProperty(name = "roundRobin", type = "string", description = "Whether or not the failover load balancer should operate in round robin mode or not. If not, then it will always start from the first endpoint when a new message is to be processed. In other words it restart from the top for every message. If round robin is enabled, then it keeps state and will continue with the next endpoint in a round robin fashion. You can also enable sticky mode together with round robin, if so then it will pick the last known good endpoint to use when starting the load balancing (instead of using the next when starting).", displayName = "Round Robin"),
-                    @YamlProperty(name = "sticky", type = "string", description = "Whether or not the failover load balancer should operate in sticky mode or not. If not, then it will always start from the first endpoint when a new message is to be processed. In other words it restart from the top for every message. If sticky is enabled, then it keeps state and will continue with the last known good endpoint. You can also enable sticky mode together with round robin, if so then it will pick the last known good endpoint to use when starting the load balancing (instead of using the next when starting).", displayName = "Sticky")
+                    @YamlProperty(name = "roundRobin", type = "boolean", defaultValue = "false", description = "Whether or not the failover load balancer should operate in round robin mode or not. If not, then it will always start from the first endpoint when a new message is to be processed. In other words it restart from the top for every message. If round robin is enabled, then it keeps state and will continue with the next endpoint in a round robin fashion. You can also enable sticky mode together with round robin, if so then it will pick the last known good endpoint to use when starting the load balancing (instead of using the next when starting).", displayName = "Round Robin"),
+                    @YamlProperty(name = "sticky", type = "boolean", defaultValue = "false", description = "Whether or not the failover load balancer should operate in sticky mode or not. If not, then it will always start from the first endpoint when a new message is to be processed. In other words it restart from the top for every message. If sticky is enabled, then it keeps state and will continue with the last known good endpoint. You can also enable sticky mode together with round robin, if so then it will pick the last known good endpoint to use when starting the load balancing (instead of using the next when starting).", displayName = "Sticky")
             }
     )
     public static class FailoverLoadBalancerDefinitionDeserializer extends YamlDeserializerBase<FailoverLoadBalancerDefinition> {
@@ -11736,7 +11735,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             nodes = "pgp",
             types = org.apache.camel.model.dataformat.PGPDataFormat.class,
             order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
-            displayName = "PGP",
+            displayName = "PGP (Pretty Good Privacy Cryptographic)",
             description = "Encrypt and decrypt messages using Java Cryptographic Extension (JCE) and PGP.",
             deprecated = false,
             properties = {
@@ -16240,78 +16239,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
     }
 
     @YamlType(
-            inline = true,
-            types = org.apache.camel.model.SagaActionUriDefinition.class,
-            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
-            properties = {
-                    @YamlProperty(name = "description", type = "string"),
-                    @YamlProperty(name = "disabled", type = "boolean"),
-                    @YamlProperty(name = "id", type = "string"),
-                    @YamlProperty(name = "note", type = "string"),
-                    @YamlProperty(name = "parameters", type = "object"),
-                    @YamlProperty(name = "uri", type = "string", required = true)
-            }
-    )
-    public static class SagaActionUriDefinitionDeserializer extends YamlDeserializerEndpointAwareBase<SagaActionUriDefinition> {
-        public SagaActionUriDefinitionDeserializer() {
-            super(SagaActionUriDefinition.class);
-        }
-
-        @Override
-        protected SagaActionUriDefinition newInstance() {
-            return new SagaActionUriDefinition();
-        }
-
-        @Override
-        protected SagaActionUriDefinition newInstance(String value) {
-            return new SagaActionUriDefinition(value);
-        }
-
-        @Override
-        protected void setEndpointUri(CamelContext camelContext, Node node,
-                SagaActionUriDefinition target, Map<String, Object> parameters) {
-            target.setUri(org.apache.camel.dsl.yaml.common.YamlSupport.createEndpointUri(camelContext, node, target.getUri(), parameters));
-        }
-
-        @Override
-        protected boolean setProperty(SagaActionUriDefinition target, String propertyKey,
-                String propertyName, Node node) {
-            propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
-            switch(propertyKey) {
-                case "disabled": {
-                    String val = asText(node);
-                    target.setDisabled(val);
-                    break;
-                }
-                case "uri": {
-                    String val = asText(node);
-                    target.setUri(val);
-                    break;
-                }
-                case "id": {
-                    String val = asText(node);
-                    target.setId(val);
-                    break;
-                }
-                case "description": {
-                    String val = asText(node);
-                    target.setDescription(val);
-                    break;
-                }
-                case "note": {
-                    String val = asText(node);
-                    target.setNote(val);
-                    break;
-                }
-                default: {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-
-    @YamlType(
             nodes = "saga",
             types = org.apache.camel.model.SagaDefinition.class,
             order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
@@ -16319,8 +16246,8 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             description = "Enables Sagas on the route",
             deprecated = false,
             properties = {
-                    @YamlProperty(name = "compensation", type = "object:org.apache.camel.model.SagaActionUriDefinition", description = "The compensation endpoint URI that must be called to compensate all changes done in the route. The route corresponding to the compensation URI must perform compensation and complete without error. If errors occur during compensation, the saga service may call again the compensation URI to retry.", displayName = "Compensation"),
-                    @YamlProperty(name = "completion", type = "object:org.apache.camel.model.SagaActionUriDefinition", description = "The completion endpoint URI that will be called when the Saga is completed successfully. The route corresponding to the completion URI must perform completion tasks and terminate without error. If errors occur during completion, the saga service may call again the completion URI to retry.", displayName = "Completion"),
+                    @YamlProperty(name = "compensation", type = "string", description = "The compensation endpoint URI that must be called to compensate all changes done in the route. The route corresponding to the compensation URI must perform compensation and complete without error. If errors occur during compensation, the saga service may call again the compensation URI to retry.", displayName = "Compensation"),
+                    @YamlProperty(name = "completion", type = "string", description = "The completion endpoint URI that will be called when the Saga is completed successfully. The route corresponding to the completion URI must perform completion tasks and terminate without error. If errors occur during completion, the saga service may call again the completion URI to retry.", displayName = "Completion"),
                     @YamlProperty(name = "completionMode", type = "enum:AUTO,MANUAL", defaultValue = "AUTO", description = "Determine how the saga should be considered complete. When set to AUTO, the saga is completed when the exchange that initiates the saga is processed successfully, or compensated when it completes exceptionally. When set to MANUAL, the user must complete or compensate the saga using the saga:complete or saga:compensate endpoints.", displayName = "Completion Mode"),
                     @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
                     @YamlProperty(name = "disabled", type = "boolean", defaultValue = "false", description = "Disables this EIP from the route.", displayName = "Disabled"),
@@ -16349,12 +16276,12 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
             propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
             switch(propertyKey) {
                 case "compensation": {
-                    org.apache.camel.model.SagaActionUriDefinition val = asType(node, org.apache.camel.model.SagaActionUriDefinition.class);
+                    String val = asText(node);
                     target.setCompensation(val);
                     break;
                 }
                 case "completion": {
-                    org.apache.camel.model.SagaActionUriDefinition val = asType(node, org.apache.camel.model.SagaActionUriDefinition.class);
+                    String val = asText(node);
                     target.setCompletion(val);
                     break;
                 }
@@ -21595,7 +21522,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "note", type = "string", description = "Sets the note of this node", displayName = "Note"),
                     @YamlProperty(name = "onPrepare", type = "string", description = "Uses the Processor when preparing the org.apache.camel.Exchange to be sent. This can be used to deep-clone messages that should be sent, or any custom logic needed before the exchange is sent.", displayName = "On Prepare"),
                     @YamlProperty(name = "parameters", type = "object"),
-                    @YamlProperty(name = "pattern", type = "enum:InOnly,InOut", description = "Sets the optional ExchangePattern used to invoke this endpoint", displayName = "Pattern"),
                     @YamlProperty(name = "uri", type = "string", required = true, description = "The uri of the endpoint to send to. The uri can be dynamic computed using the org.apache.camel.language.simple.SimpleLanguage expression.", displayName = "Uri"),
                     @YamlProperty(name = "variableReceive", type = "string", description = "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual.", displayName = "Variable Receive"),
                     @YamlProperty(name = "variableSend", type = "string", description = "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual.", displayName = "Variable Send")
@@ -21665,11 +21591,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "onPrepare": {
                     String val = asText(node);
                     target.setOnPrepare(val);
-                    break;
-                }
-                case "pattern": {
-                    String val = asText(node);
-                    target.setPattern(val);
                     break;
                 }
                 case "uri": {

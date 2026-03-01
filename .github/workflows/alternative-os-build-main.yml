@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-name: Alternative OS Build (Camel 4)
+name: Alternative OS Build
 
 on:
   schedule:
@@ -34,7 +34,7 @@ jobs:
         os: [windows-latest, macos-latest, windows-2019]
       fail-fast: false
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Set up JDK ${{ matrix.os }}
@@ -46,7 +46,7 @@ jobs:
       - name: mvn build ${{ matrix.os }}
         run: ./mvnw -B -V -D'http.keepAlive=false' -l build.log -D'maven.wagon.http.pool=false' -D'maven.wagon.httpconnectionManager.ttlSeconds=120' --no-transfer-progress -Dquickly install
       - name: Archive logs ${{ matrix.os }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
           name: build-${{ matrix.os }}

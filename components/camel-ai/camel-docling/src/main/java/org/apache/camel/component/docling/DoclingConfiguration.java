@@ -31,7 +31,7 @@ public class DoclingConfiguration implements Cloneable {
 
     @UriParam
     @Metadata(required = true, defaultValue = "CONVERT_TO_MARKDOWN", description = "The operation to perform",
-              enums = "CONVERT_TO_MARKDOWN,CONVERT_TO_HTML,CONVERT_TO_JSON,EXTRACT_TEXT,EXTRACT_STRUCTURED_DATA,SUBMIT_ASYNC_CONVERSION,CHECK_CONVERSION_STATUS,BATCH_CONVERT_TO_MARKDOWN,BATCH_CONVERT_TO_HTML,BATCH_CONVERT_TO_JSON,BATCH_EXTRACT_TEXT,BATCH_EXTRACT_STRUCTURED_DATA,EXTRACT_METADATA")
+              enums = "CONVERT_TO_MARKDOWN,CONVERT_TO_HTML,CONVERT_TO_JSON,EXTRACT_TEXT,EXTRACT_STRUCTURED_DATA,SUBMIT_ASYNC_CONVERSION,CHECK_CONVERSION_STATUS,BATCH_CONVERT_TO_MARKDOWN,BATCH_CONVERT_TO_HTML,BATCH_CONVERT_TO_JSON,BATCH_EXTRACT_TEXT,BATCH_EXTRACT_STRUCTURED_DATA,EXTRACT_METADATA,CHUNK_HYBRID,CHUNK_HIERARCHICAL")
     private DoclingOperations operation = DoclingOperations.CONVERT_TO_MARKDOWN;
 
     @UriParam(label = "advanced")
@@ -86,6 +86,12 @@ public class DoclingConfiguration implements Cloneable {
     private String authenticationToken;
 
     @UriParam(label = "security")
+    @Metadata(description = "OAuth profile name for obtaining an access token via the OAuth 2.0 Client Credentials grant. "
+                            + "When set, the token is acquired from the configured identity provider and used as authenticationToken. "
+                            + "Requires camel-oauth on the classpath.")
+    private String oauthProfile;
+
+    @UriParam(label = "security")
     @Metadata(description = "Authentication scheme (BEARER, API_KEY, NONE)", defaultValue = "NONE",
               enums = "BEARER,API_KEY,NONE")
     private AuthenticationScheme authenticationScheme = AuthenticationScheme.NONE;
@@ -136,6 +142,98 @@ public class DoclingConfiguration implements Cloneable {
     @UriParam(label = "metadata")
     @Metadata(description = "Include raw metadata as returned by the parser", defaultValue = "false")
     private boolean includeRawMetadata = false;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable OCR processing in docling-serve API mode. When not set, the server uses its own defaults. Set enableOCR to false to explicitly disable OCR.")
+    private Boolean doOcr;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Force OCR processing even for digital documents")
+    private Boolean forceOcr;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "OCR engine to use", enums = "AUTO,EASYOCR,OCRMAC,RAPIDOCR,TESSEROCR,TESSERACT")
+    private String ocrEngine;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "PDF parsing backend", enums = "DLPARSE_V1,DLPARSE_V2,DLPARSE_V4,PYPDFIUM2")
+    private String pdfBackend;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Table structure recognition mode", enums = "ACCURATE,FAST")
+    private String tableMode;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable table cell matching post-processing")
+    private Boolean tableCellMatching;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable table structure recognition")
+    private Boolean doTableStructure;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Processing pipeline to use", enums = "ASR,STANDARD,VLM")
+    private String pipeline;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable code enrichment in document processing")
+    private Boolean doCodeEnrichment;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable formula enrichment in document processing")
+    private Boolean doFormulaEnrichment;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable picture classification in document processing")
+    private Boolean doPictureClassification;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Enable picture description generation in document processing")
+    private Boolean doPictureDescription;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Include images in the conversion output")
+    private Boolean includeImages;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Image export mode for referenced images", enums = "EMBEDDED,PLACEHOLDER,REFERENCED")
+    private String imageExportMode;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Abort processing on error")
+    private Boolean abortOnError;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Document processing timeout in seconds")
+    private Long documentTimeout;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Scale factor for exported images")
+    private Double imagesScale;
+
+    @UriParam(label = "advanced")
+    @Metadata(description = "Placeholder string for page breaks in markdown output")
+    private String mdPageBreakPlaceholder;
+
+    @UriParam(label = "chunking")
+    @Metadata(description = "Tokenizer model for hybrid chunking (e.g. sentence-transformers/all-MiniLM-L6-v2)")
+    private String chunkingTokenizer;
+
+    @UriParam(label = "chunking")
+    @Metadata(description = "Maximum number of tokens per chunk for hybrid chunking")
+    private Integer chunkingMaxTokens;
+
+    @UriParam(label = "chunking")
+    @Metadata(description = "Whether to merge peer chunks in hybrid chunking", defaultValue = "true")
+    private Boolean chunkingMergePeers;
+
+    @UriParam(label = "chunking")
+    @Metadata(description = "Include raw text in chunk output", defaultValue = "false")
+    private Boolean chunkingIncludeRawText;
+
+    @UriParam(label = "chunking")
+    @Metadata(description = "Use markdown format for tables in chunk output", defaultValue = "false")
+    private Boolean chunkingUseMarkdownTables;
 
     public DoclingOperations getOperation() {
         return operation;
@@ -241,6 +339,14 @@ public class DoclingConfiguration implements Cloneable {
         this.authenticationToken = authenticationToken;
     }
 
+    public String getOauthProfile() {
+        return oauthProfile;
+    }
+
+    public void setOauthProfile(String oauthProfile) {
+        this.oauthProfile = oauthProfile;
+    }
+
     public AuthenticationScheme getAuthenticationScheme() {
         return authenticationScheme;
     }
@@ -335,6 +441,190 @@ public class DoclingConfiguration implements Cloneable {
 
     public void setIncludeRawMetadata(boolean includeRawMetadata) {
         this.includeRawMetadata = includeRawMetadata;
+    }
+
+    public Boolean getDoOcr() {
+        return doOcr;
+    }
+
+    public void setDoOcr(Boolean doOcr) {
+        this.doOcr = doOcr;
+    }
+
+    public Boolean getForceOcr() {
+        return forceOcr;
+    }
+
+    public void setForceOcr(Boolean forceOcr) {
+        this.forceOcr = forceOcr;
+    }
+
+    public String getOcrEngine() {
+        return ocrEngine;
+    }
+
+    public void setOcrEngine(String ocrEngine) {
+        this.ocrEngine = ocrEngine;
+    }
+
+    public String getPdfBackend() {
+        return pdfBackend;
+    }
+
+    public void setPdfBackend(String pdfBackend) {
+        this.pdfBackend = pdfBackend;
+    }
+
+    public String getTableMode() {
+        return tableMode;
+    }
+
+    public void setTableMode(String tableMode) {
+        this.tableMode = tableMode;
+    }
+
+    public Boolean getTableCellMatching() {
+        return tableCellMatching;
+    }
+
+    public void setTableCellMatching(Boolean tableCellMatching) {
+        this.tableCellMatching = tableCellMatching;
+    }
+
+    public Boolean getDoTableStructure() {
+        return doTableStructure;
+    }
+
+    public void setDoTableStructure(Boolean doTableStructure) {
+        this.doTableStructure = doTableStructure;
+    }
+
+    public String getPipeline() {
+        return pipeline;
+    }
+
+    public void setPipeline(String pipeline) {
+        this.pipeline = pipeline;
+    }
+
+    public Boolean getDoCodeEnrichment() {
+        return doCodeEnrichment;
+    }
+
+    public void setDoCodeEnrichment(Boolean doCodeEnrichment) {
+        this.doCodeEnrichment = doCodeEnrichment;
+    }
+
+    public Boolean getDoFormulaEnrichment() {
+        return doFormulaEnrichment;
+    }
+
+    public void setDoFormulaEnrichment(Boolean doFormulaEnrichment) {
+        this.doFormulaEnrichment = doFormulaEnrichment;
+    }
+
+    public Boolean getDoPictureClassification() {
+        return doPictureClassification;
+    }
+
+    public void setDoPictureClassification(Boolean doPictureClassification) {
+        this.doPictureClassification = doPictureClassification;
+    }
+
+    public Boolean getDoPictureDescription() {
+        return doPictureDescription;
+    }
+
+    public void setDoPictureDescription(Boolean doPictureDescription) {
+        this.doPictureDescription = doPictureDescription;
+    }
+
+    public Boolean getIncludeImages() {
+        return includeImages;
+    }
+
+    public void setIncludeImages(Boolean includeImages) {
+        this.includeImages = includeImages;
+    }
+
+    public String getImageExportMode() {
+        return imageExportMode;
+    }
+
+    public void setImageExportMode(String imageExportMode) {
+        this.imageExportMode = imageExportMode;
+    }
+
+    public Boolean getAbortOnError() {
+        return abortOnError;
+    }
+
+    public void setAbortOnError(Boolean abortOnError) {
+        this.abortOnError = abortOnError;
+    }
+
+    public Long getDocumentTimeout() {
+        return documentTimeout;
+    }
+
+    public void setDocumentTimeout(Long documentTimeout) {
+        this.documentTimeout = documentTimeout;
+    }
+
+    public Double getImagesScale() {
+        return imagesScale;
+    }
+
+    public void setImagesScale(Double imagesScale) {
+        this.imagesScale = imagesScale;
+    }
+
+    public String getMdPageBreakPlaceholder() {
+        return mdPageBreakPlaceholder;
+    }
+
+    public void setMdPageBreakPlaceholder(String mdPageBreakPlaceholder) {
+        this.mdPageBreakPlaceholder = mdPageBreakPlaceholder;
+    }
+
+    public String getChunkingTokenizer() {
+        return chunkingTokenizer;
+    }
+
+    public void setChunkingTokenizer(String chunkingTokenizer) {
+        this.chunkingTokenizer = chunkingTokenizer;
+    }
+
+    public Integer getChunkingMaxTokens() {
+        return chunkingMaxTokens;
+    }
+
+    public void setChunkingMaxTokens(Integer chunkingMaxTokens) {
+        this.chunkingMaxTokens = chunkingMaxTokens;
+    }
+
+    public Boolean getChunkingMergePeers() {
+        return chunkingMergePeers;
+    }
+
+    public void setChunkingMergePeers(Boolean chunkingMergePeers) {
+        this.chunkingMergePeers = chunkingMergePeers;
+    }
+
+    public Boolean getChunkingIncludeRawText() {
+        return chunkingIncludeRawText;
+    }
+
+    public void setChunkingIncludeRawText(Boolean chunkingIncludeRawText) {
+        this.chunkingIncludeRawText = chunkingIncludeRawText;
+    }
+
+    public Boolean getChunkingUseMarkdownTables() {
+        return chunkingUseMarkdownTables;
+    }
+
+    public void setChunkingUseMarkdownTables(Boolean chunkingUseMarkdownTables) {
+        this.chunkingUseMarkdownTables = chunkingUseMarkdownTables;
     }
 
     public DoclingConfiguration copy() {

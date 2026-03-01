@@ -43,6 +43,7 @@ import org.apache.camel.main.download.BasePackageScanDownloadListener;
 import org.apache.camel.main.download.CamelCustomClassLoader;
 import org.apache.camel.main.download.CircuitBreakerDownloader;
 import org.apache.camel.main.download.CommandLineDependencyDownloader;
+import org.apache.camel.main.download.DependencyDownloadFactoryFinderResolver;
 import org.apache.camel.main.download.DependencyDownloaderClassLoader;
 import org.apache.camel.main.download.DependencyDownloaderClassResolver;
 import org.apache.camel.main.download.DependencyDownloaderComponentResolver;
@@ -73,12 +74,13 @@ import org.apache.camel.main.download.MavenDependencyDownloader;
 import org.apache.camel.main.download.PackageNameSourceLoader;
 import org.apache.camel.main.download.PromptPropertyPlaceholderSource;
 import org.apache.camel.main.download.SagaDownloader;
-import org.apache.camel.main.download.StubBeanRepository;
 import org.apache.camel.main.download.StubComponentAutowireStrategy;
 import org.apache.camel.main.download.TransactedDownloader;
 import org.apache.camel.main.download.TypeConverterLoaderDownloadListener;
 import org.apache.camel.main.injection.AnnotationDependencyInjection;
 import org.apache.camel.main.reload.OpenApiGeneratorReloadStrategy;
+import org.apache.camel.main.stub.StubBeanRepository;
+import org.apache.camel.main.stub.StubEipReifier;
 import org.apache.camel.main.util.ClipboardReloadStrategy;
 import org.apache.camel.main.util.ExtraClassesClassLoader;
 import org.apache.camel.main.util.ExtraFilesClassLoader;
@@ -439,11 +441,13 @@ public class KameletMain extends MainCommandLineSupport {
         answer.getCamelContextExtension().setStartupStepRecorder(new BacklogStartupStepRecorder());
 
         boolean export = "true".equals(getInitialProperties().get(getInstanceType() + ".export"));
+        boolean transform = "true".equals(getInitialProperties().get(getInstanceType() + ".transform"));
         if (export) {
-            setupExport(answer, export);
+            // both when exporting and transforming routes then we need to setup in special mode
+            setupExport(answer, true);
         } else {
             PropertiesComponent pc = (PropertiesComponent) answer.getPropertiesComponent();
-            pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(answer, false));
+            pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(answer, false, transform));
         }
 
         // groovy scripts
@@ -481,7 +485,6 @@ public class KameletMain extends MainCommandLineSupport {
         SagaDownloader.registerDownloadReifiers(this);
 
         // if transforming DSL then disable processors as we just want to work on the model (not runtime processors)
-        boolean transform = "true".equals(getInitialProperties().get(getInstanceType() + ".transform"));
         if (transform) {
             // we just want to transform, so disable custom bean or processors as they may use code that does not work
             answer.getGlobalOptions().put(ProcessorReifier.DISABLE_BEAN_OR_PROCESS_PROCESSORS, "true");
@@ -490,6 +493,8 @@ public class KameletMain extends MainCommandLineSupport {
             // turn off inlining routes
             configure().rest().withInlineRoutes(false);
             blueprintXmlBeansHandler.setTransform(true);
+            // stub EIPs
+            StubEipReifier.registerStubEipReifiers(answer);
         }
         if (silent) {
             // silent should not include http server
@@ -627,6 +632,12 @@ public class KameletMain extends MainCommandLineSupport {
             String springBootVersion = (String) getInitialProperties().get(getInstanceType() + ".springBootVersion");
             String quarkusVersion = (String) getInitialProperties().get(getInstanceType() + ".quarkusVersion");
 
+            // factory finder that can autodownload from known dependencies
+            KnownDependenciesResolver ffKnownDeps = new KnownDependenciesResolver(answer, springBootVersion, quarkusVersion);
+            ffKnownDeps.loadKnownFactoryFinderDependencies();
+            DependencyDownloadFactoryFinderResolver fr = new DependencyDownloadFactoryFinderResolver(answer, ffKnownDeps);
+            answer.getCamelContextExtension().addContextPlugin(FactoryFinderResolver.class, fr);
+
             KnownDependenciesResolver knownDeps = new KnownDependenciesResolver(answer, springBootVersion, quarkusVersion);
             knownDeps.loadKnownDependencies();
             DependencyDownloaderPropertyBindingListener listener
@@ -660,7 +671,7 @@ public class KameletMain extends MainCommandLineSupport {
             answer.getCamelContextExtension().addContextPlugin(DataFormatResolver.class,
                     new DependencyDownloaderDataFormatResolver(answer, stubPattern, silent));
             answer.getCamelContextExtension().addContextPlugin(LanguageResolver.class,
-                    new DependencyDownloaderLanguageResolver(answer, stubPattern, silent));
+                    new DependencyDownloaderLanguageResolver(answer, stubPattern, silent, transform));
             answer.getCamelContextExtension().addContextPlugin(TransformerResolver.class,
                     new DependencyDownloaderTransformerResolver(answer, stubPattern, silent));
             answer.getCamelContextExtension().addContextPlugin(UriFactoryResolver.class,
@@ -679,11 +690,8 @@ public class KameletMain extends MainCommandLineSupport {
             }
             answer.setInjector(new KameletMainInjector(answer.getInjector(), stubPattern, silent));
             Object kameletsVersion = getInitialProperties().get(getInstanceType() + ".kameletsVersion");
-            if (kameletsVersion != null) {
-                answer.addService(new DependencyDownloaderKamelet(answer, kameletsVersion.toString()));
-            } else {
-                answer.addService(new DependencyDownloaderKamelet(answer));
-            }
+            answer.addService(new DependencyDownloaderKamelet(
+                    answer, kameletsVersion != null ? kameletsVersion.toString() : null));
             answer.addService(new DependencyDownloaderPropertiesComponent(answer, knownDeps, silent));
 
             // reloader
@@ -781,7 +789,7 @@ public class KameletMain extends MainCommandLineSupport {
         addInitialProperty("camel.component.properties.ignore-missing-location", "true");
         PropertiesComponent pc = (PropertiesComponent) answer.getPropertiesComponent();
         pc.setPropertiesParser(new ExportPropertiesParser(answer));
-        pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(answer, export));
+        pc.setPropertiesFunctionResolver(new DependencyDownloaderPropertiesFunctionResolver(answer, export, false));
 
         // override default type converters with our export converter that is more flexible during exporting
         ExportTypeConverter ec = new ExportTypeConverter();

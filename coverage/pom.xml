@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-parent</artifactId>
-        <version>4.18.0-SNAPSHOT</version>
+        <version>4.19.0-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -37,6 +37,8 @@
     <properties>
         <license.skip>true</license.skip>
         <enforcer.skip>true</enforcer.skip>
+        <!-- Vulnerability scan only enabled runtime modules -->
+        <dependency-check.skip>true</dependency-check.skip>
     </properties>
 
     <repositories>
@@ -952,6 +954,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
+            <artifactId>camel-google-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
             <artifactId>camel-google-calendar</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -973,11 +980,6 @@
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-google-pubsub</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-google-pubsub-lite</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -1662,11 +1664,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-nitrite</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.camel</groupId>
             <artifactId>camel-oaipmh</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -2225,11 +2222,6 @@
             <artifactId>camel-tensorflow-serving</artifactId>
             <version>${project.version}</version>
         </dependency>
-      <!-- dependency>
-            <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test</artifactId>
-            <version>4.18.0-SNAPSHOT</version>
-      </dependency -->
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-test-junit5</artifactId>

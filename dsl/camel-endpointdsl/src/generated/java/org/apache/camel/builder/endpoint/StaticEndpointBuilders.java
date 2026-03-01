@@ -2111,6 +2111,52 @@ public class StaticEndpointBuilders {
         return FilesEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Azure Functions (camel-azure-functions)
+     * Invoke and manage Azure Functions.
+     * 
+     * Category: cloud,serverless
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-azure-functions
+     * 
+     * Syntax: <code>azure-functions:functionApp/functionName</code>
+     * 
+     * Path parameter: functionApp (required)
+     * The Azure Function App name
+     * 
+     * Path parameter: functionName
+     * The function name within the app (required for invokeFunction operation)
+     * 
+     * @param path functionApp/functionName
+     * @return the dsl builder
+     */
+    public static FunctionsEndpointBuilderFactory.FunctionsEndpointBuilder azureFunctions(String path) {
+        return azureFunctions("azure-functions", path);
+    }
+    /**
+     * Azure Functions (camel-azure-functions)
+     * Invoke and manage Azure Functions.
+     * 
+     * Category: cloud,serverless
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-azure-functions
+     * 
+     * Syntax: <code>azure-functions:functionApp/functionName</code>
+     * 
+     * Path parameter: functionApp (required)
+     * The Azure Function App name
+     * 
+     * Path parameter: functionName
+     * The function name within the app (required for invokeFunction operation)
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path functionApp/functionName
+     * @return the dsl builder
+     */
+    public static FunctionsEndpointBuilderFactory.FunctionsEndpointBuilder azureFunctions(String componentName, String path) {
+        return FunctionsEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Azure Key Vault (camel-azure-key-vault)
      * Manage secrets and keys in Azure Key Vault Service
      * 
@@ -5786,6 +5832,46 @@ public class StaticEndpointBuilders {
         return GoogleDriveEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Google Firestore (camel-google-firestore)
+     * Store and retrieve data from Google Cloud Firestore NoSQL database.
+     * 
+     * Category: cloud,database
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-google-firestore
+     * 
+     * Syntax: <code>google-firestore:collectionName</code>
+     * 
+     * Path parameter: collectionName (required)
+     * The collection name to use
+     * 
+     * @param path collectionName
+     * @return the dsl builder
+     */
+    public static GoogleFirestoreEndpointBuilderFactory.GoogleFirestoreEndpointBuilder googleFirestore(String path) {
+        return googleFirestore("google-firestore", path);
+    }
+    /**
+     * Google Firestore (camel-google-firestore)
+     * Store and retrieve data from Google Cloud Firestore NoSQL database.
+     * 
+     * Category: cloud,database
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-google-firestore
+     * 
+     * Syntax: <code>google-firestore:collectionName</code>
+     * 
+     * Path parameter: collectionName (required)
+     * The collection name to use
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path collectionName
+     * @return the dsl builder
+     */
+    public static GoogleFirestoreEndpointBuilderFactory.GoogleFirestoreEndpointBuilder googleFirestore(String componentName, String path) {
+        return GoogleFirestoreEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * Google Cloud Functions (camel-google-functions)
      * Manage and invoke Google Cloud Functions
      * 
@@ -5968,66 +6054,6 @@ public class StaticEndpointBuilders {
      */
     public static GooglePubsubEndpointBuilderFactory.GooglePubsubEndpointBuilder googlePubsub(String componentName, String path) {
         return GooglePubsubEndpointBuilderFactory.endpointBuilder(componentName, path);
-    }
-    /**
-     * Google PubSub Lite (camel-google-pubsub-lite)
-     * Send and receive messages to/from Google Cloud Platform PubSub Lite
-     * Service.
-     * 
-     * Category: cloud,messaging
-     * Since: 4.6
-     * Maven coordinates: org.apache.camel:camel-google-pubsub-lite
-     * 
-     * Syntax:
-     * <code>google-pubsub-lite:projectId:location:destinationName</code>
-     * 
-     * Path parameter: projectId (required)
-     * The Google Cloud PubSub Lite Project Id
-     * 
-     * Path parameter: location (required)
-     * The Google Cloud PubSub Lite location
-     * 
-     * Path parameter: destinationName (required)
-     * The Destination Name. For the consumer this will be the subscription
-     * name, while for the producer this will be the topic name.
-     * 
-     * @param path projectId:location:destinationName
-     * @return the dsl builder
-     */
-    @Deprecated
-    public static GooglePubsubLiteEndpointBuilderFactory.GooglePubsubLiteEndpointBuilder googlePubsubLite(String path) {
-        return googlePubsubLite("google-pubsub-lite", path);
-    }
-    /**
-     * Google PubSub Lite (camel-google-pubsub-lite)
-     * Send and receive messages to/from Google Cloud Platform PubSub Lite
-     * Service.
-     * 
-     * Category: cloud,messaging
-     * Since: 4.6
-     * Maven coordinates: org.apache.camel:camel-google-pubsub-lite
-     * 
-     * Syntax:
-     * <code>google-pubsub-lite:projectId:location:destinationName</code>
-     * 
-     * Path parameter: projectId (required)
-     * The Google Cloud PubSub Lite Project Id
-     * 
-     * Path parameter: location (required)
-     * The Google Cloud PubSub Lite location
-     * 
-     * Path parameter: destinationName (required)
-     * The Destination Name. For the consumer this will be the subscription
-     * name, while for the producer this will be the topic name.
-     * 
-     * @param componentName to use a custom component name for the endpoint
-     * instead of the default name
-     * @param path projectId:location:destinationName
-     * @return the dsl builder
-     */
-    @Deprecated
-    public static GooglePubsubLiteEndpointBuilderFactory.GooglePubsubLiteEndpointBuilder googlePubsubLite(String componentName, String path) {
-        return GooglePubsubLiteEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Google Secret Manager (camel-google-secret-manager)
@@ -6496,6 +6522,7 @@ public class StaticEndpointBuilders {
      * @param path cacheName
      * @return the dsl builder
      */
+    @Deprecated
     public static HazelcastAtomicnumberEndpointBuilderFactory.HazelcastAtomicnumberEndpointBuilder hazelcastAtomicvalue(String path) {
         return hazelcastAtomicvalue("hazelcast-atomicvalue", path);
     }
@@ -6518,6 +6545,7 @@ public class StaticEndpointBuilders {
      * @param path cacheName
      * @return the dsl builder
      */
+    @Deprecated
     public static HazelcastAtomicnumberEndpointBuilderFactory.HazelcastAtomicnumberEndpointBuilder hazelcastAtomicvalue(String componentName, String path) {
         return HazelcastAtomicnumberEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
@@ -6680,6 +6708,48 @@ public class StaticEndpointBuilders {
      */
     public static HazelcastMultimapEndpointBuilderFactory.HazelcastMultimapEndpointBuilder hazelcastMultimap(String componentName, String path) {
         return HazelcastMultimapEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Hazelcast PN Counter (camel-hazelcast)
+     * Increment, decrement, get, etc. operations on a Hazelcast PN Counter
+     * (CRDT counter).
+     * 
+     * Category: cache,clustering
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-hazelcast
+     * 
+     * Syntax: <code>hazelcast-pncounter:cacheName</code>
+     * 
+     * Path parameter: cacheName (required)
+     * The name of the cache
+     * 
+     * @param path cacheName
+     * @return the dsl builder
+     */
+    public static HazelcastPNCounterEndpointBuilderFactory.HazelcastPNCounterEndpointBuilder hazelcastPncounter(String path) {
+        return hazelcastPncounter("hazelcast-pncounter", path);
+    }
+    /**
+     * Hazelcast PN Counter (camel-hazelcast)
+     * Increment, decrement, get, etc. operations on a Hazelcast PN Counter
+     * (CRDT counter).
+     * 
+     * Category: cache,clustering
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-hazelcast
+     * 
+     * Syntax: <code>hazelcast-pncounter:cacheName</code>
+     * 
+     * Path parameter: cacheName (required)
+     * The name of the cache
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path cacheName
+     * @return the dsl builder
+     */
+    public static HazelcastPNCounterEndpointBuilderFactory.HazelcastPNCounterEndpointBuilder hazelcastPncounter(String componentName, String path) {
+        return HazelcastPNCounterEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Hazelcast Queue (camel-hazelcast)
@@ -6981,6 +7051,56 @@ public class StaticEndpointBuilders {
      */
     public static HttpEndpointBuilderFactory.HttpEndpointBuilder https(String path) {
         return http("https", path);
+    }
+    /**
+     * Hugging Face (camel-huggingface)
+     * Integration with Hugging Face's Model Hub by using the Deep Java Library
+     * (DJL) Python bridge
+     * 
+     * Category: ai
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-huggingface
+     * 
+     * Syntax: <code>huggingface:task</code>
+     * 
+     * Path parameter: task (required)
+     * The Hugging Face task to perform (e.g., TEXT_CLASSIFICATION)
+     * There are 10 enums and the value can be one of: TEXT_CLASSIFICATION,
+     * TEXT_GENERATION, QUESTION_ANSWERING, SUMMARIZATION,
+     * ZERO_SHOT_CLASSIFICATION, SENTENCE_EMBEDDINGS, TEXT_TO_IMAGE,
+     * AUTOMATIC_SPEECH_RECOGNITION, TEXT_TO_SPEECH, CHAT
+     * 
+     * @param path task
+     * @return the dsl builder
+     */
+    public static HuggingFaceEndpointBuilderFactory.HuggingFaceEndpointBuilder huggingface(String path) {
+        return huggingface("huggingface", path);
+    }
+    /**
+     * Hugging Face (camel-huggingface)
+     * Integration with Hugging Face's Model Hub by using the Deep Java Library
+     * (DJL) Python bridge
+     * 
+     * Category: ai
+     * Since: 4.19
+     * Maven coordinates: org.apache.camel:camel-huggingface
+     * 
+     * Syntax: <code>huggingface:task</code>
+     * 
+     * Path parameter: task (required)
+     * The Hugging Face task to perform (e.g., TEXT_CLASSIFICATION)
+     * There are 10 enums and the value can be one of: TEXT_CLASSIFICATION,
+     * TEXT_GENERATION, QUESTION_ANSWERING, SUMMARIZATION,
+     * ZERO_SHOT_CLASSIFICATION, SENTENCE_EMBEDDINGS, TEXT_TO_IMAGE,
+     * AUTOMATIC_SPEECH_RECOGNITION, TEXT_TO_SPEECH, CHAT
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path task
+     * @return the dsl builder
+     */
+    public static HuggingFaceEndpointBuilderFactory.HuggingFaceEndpointBuilder huggingface(String componentName, String path) {
+        return HuggingFaceEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Huawei Distributed Message Service (DMS) (camel-huaweicloud-dms)
@@ -8906,6 +9026,7 @@ public class StaticEndpointBuilders {
      * @param path resourceUri
      * @return the dsl builder
      */
+    @Deprecated
     public static JsonPatchEndpointBuilderFactory.JsonPatchEndpointBuilder jsonPatch(String path) {
         return jsonPatch("json-patch", path);
     }
@@ -8933,6 +9054,7 @@ public class StaticEndpointBuilders {
      * @param path resourceUri
      * @return the dsl builder
      */
+    @Deprecated
     public static JsonPatchEndpointBuilderFactory.JsonPatchEndpointBuilder jsonPatch(String componentName, String path) {
         return JsonPatchEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
@@ -11971,48 +12093,6 @@ public class StaticEndpointBuilders {
         return NettyHttpEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Nitrite (camel-nitrite)
-     * Access Nitrite databases.
-     * 
-     * Category: database
-     * Since: 3.0
-     * Maven coordinates: org.apache.camel:camel-nitrite
-     * 
-     * Syntax: <code>nitrite:database</code>
-     * 
-     * Path parameter: database (required)
-     * Path to database file. Will be created if not exists.
-     * 
-     * @param path database
-     * @return the dsl builder
-     */
-    @Deprecated
-    public static NitriteEndpointBuilderFactory.NitriteEndpointBuilder nitrite(String path) {
-        return nitrite("nitrite", path);
-    }
-    /**
-     * Nitrite (camel-nitrite)
-     * Access Nitrite databases.
-     * 
-     * Category: database
-     * Since: 3.0
-     * Maven coordinates: org.apache.camel:camel-nitrite
-     * 
-     * Syntax: <code>nitrite:database</code>
-     * 
-     * Path parameter: database (required)
-     * Path to database file. Will be created if not exists.
-     * 
-     * @param componentName to use a custom component name for the endpoint
-     * instead of the default name
-     * @param path database
-     * @return the dsl builder
-     */
-    @Deprecated
-    public static NitriteEndpointBuilderFactory.NitriteEndpointBuilder nitrite(String componentName, String path) {
-        return NitriteEndpointBuilderFactory.endpointBuilder(componentName, path);
-    }
-    /**
      * OAI-PMH (camel-oaipmh)
      * Harvest metadata using OAI-PMH protocol
      * 
@@ -12207,7 +12287,8 @@ public class StaticEndpointBuilders {
      * Syntax: <code>openai:operation</code>
      * 
      * Path parameter: operation (required)
-     * The operation to perform: 'chat-completion' or 'embeddings'
+     * The operation to perform: 'chat-completion', 'embeddings', or
+     * 'tool-execution'
      * 
      * @param path operation
      * @return the dsl builder
@@ -12226,7 +12307,8 @@ public class StaticEndpointBuilders {
      * Syntax: <code>openai:operation</code>
      * 
      * Path parameter: operation (required)
-     * The operation to perform: 'chat-completion' or 'embeddings'
+     * The operation to perform: 'chat-completion', 'embeddings', or
+     * 'tool-execution'
      * 
      * @param componentName to use a custom component name for the endpoint
      * instead of the default name
